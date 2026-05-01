@@ -1,0 +1,26 @@
+{
+  "name": "ludo_test_automation_pytest",
+  "version": "1.0.0",
+  "description": "This project uses pytest and Playwright with the Page Object Model to automate the Strategic Ludo web app at https://strategic.expo.app/.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dibaihss/ludo_test_automation_pytest.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/dibaihss/ludo_test_automation_pytest/issues"
+  },
+  "homepage": "https://github.com/dibaihss/ludo_test_automation_pytest#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^25.6.0"
+  }
+}
