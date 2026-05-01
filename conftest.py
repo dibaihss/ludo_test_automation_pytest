@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -21,13 +22,13 @@ def settings() -> Settings:
 
 
 @pytest.fixture(scope="session")
-def playwright_instance() -> Playwright:
+def playwright_instance() -> Iterator[Playwright]:
     with sync_playwright() as playwright:
         yield playwright
 
 
 @pytest.fixture(scope="session")
-def browser(playwright_instance: Playwright, settings: Settings) -> Browser:
+def browser(playwright_instance: Playwright, settings: Settings) -> Iterator[Browser]:
     browser_factory = getattr(playwright_instance, settings.browser_name)
     browser = browser_factory.launch(headless=settings.headless, slow_mo=settings.slow_mo)
     yield browser
@@ -35,7 +36,7 @@ def browser(playwright_instance: Playwright, settings: Settings) -> Browser:
 
 
 @pytest.fixture()
-def context(browser: Browser, settings: Settings) -> BrowserContext:
+def context(browser: Browser, settings: Settings) -> Iterator[BrowserContext]:
     context = browser.new_context(
         viewport={"width": settings.viewport_width, "height": settings.viewport_height}
     )
@@ -45,7 +46,7 @@ def context(browser: Browser, settings: Settings) -> BrowserContext:
 
 
 @pytest.fixture()
-def page(context: BrowserContext, request: pytest.FixtureRequest) -> Page:
+def page(context: BrowserContext, request: pytest.FixtureRequest) -> Iterator[Page]:
     page = context.new_page()
     request.node._playwright_page = page
     yield page

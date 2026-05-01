@@ -12,3 +12,9 @@ def test_bots_take_turns_and_blue_can_act_again(offline_game_screen):
 
     offline_game_screen.enter_soldier(color="blue")
     offline_game_screen.assert_soldier_visible(3)
+    
+    offline_game_screen.wait_for_turn_to_change_from("blue")
+    offline_game_screen.wait_for_turn("blue")
+    
+    offline_game_screen.move_piece(steps=1, color="blue")
+    offline_game_screen.assert_soldier_visible(3)
