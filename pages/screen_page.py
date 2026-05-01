@@ -9,6 +9,9 @@ from pages.base_page import BasePage
 
 class ScreenPage(BasePage):
     game_screen_test_id = "game-screen"
+    turn_color_pattern = re.compile(
+        r"Time:\s*\d+s[^a-z]*(red|blue|yellow|green)", re.IGNORECASE
+    )
     tutorial_title = "Select a soldier"
     tutorial_dismiss = "Skip tutorial"
     turn_action = "skip my turn"
@@ -36,6 +39,56 @@ class ScreenPage(BasePage):
 
     def exit_button(self) -> Locator:
         return self.page.get_by_test_id("game-exit-button")
+
+    def current_turn_color(self) -> str:
+        root_text = self.root.text_content() or ""
+        match = self.turn_color_pattern.search(root_text)
+        if match is None:
+            raise AssertionError(f"Could not determine turn color from {root_text!r}")
+        return match.group(1).lower()
+
+    def assert_turn_is(self, color: str) -> None:
+        expected_color = color.lower()
+        actual_color = self.current_turn_color()
+        assert actual_color == expected_color, (
+            f"Expected turn to be {expected_color}, but got {actual_color}"
+        )
+
+    def wait_for_turn(self, color: str, timeout_ms: int = 45_000) -> None:
+        expected_color = color.lower()
+        self.page.wait_for_function(
+            """
+            ([testId, expectedColor]) => {
+                const root = document.querySelector(`[data-testid="${testId}"]`);
+                if (!root) {
+                    return false;
+                }
+                const text = root.textContent || "";
+                const match = text.match(/Time:\s*\d+s[^A-Za-z]*(red|blue|yellow|green)/i);
+                return !!match && match[1].toLowerCase() === expectedColor;
+            }
+            """,
+            arg=[self.game_screen_test_id, expected_color],
+            timeout=timeout_ms,
+        )
+
+    def wait_for_turn_to_change_from(self, color: str, timeout_ms: int = 15_000) -> None:
+        original_color = color.lower()
+        self.page.wait_for_function(
+            """
+            ([testId, originalColor]) => {
+                const root = document.querySelector(`[data-testid="${testId}"]`);
+                if (!root) {
+                    return false;
+                }
+                const text = root.textContent || "";
+                const match = text.match(/Time:\s*\d+s[^A-Za-z]*(red|blue|yellow|green)/i);
+                return !!match && match[1].toLowerCase() !== originalColor;
+            }
+            """,
+            arg=[self.game_screen_test_id, original_color],
+            timeout=timeout_ms,
+        )
 
     def assert_loaded(self) -> None:
         expect(self.page).to_have_title(re.compile("Game", re.IGNORECASE))
