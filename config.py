@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import urlparse
 
 
 def _load_dotenv() -> None:
@@ -25,11 +26,20 @@ def _load_dotenv() -> None:
 _load_dotenv()
 
 
+def _get_base_url() -> str:
+    base_url = os.getenv("BASE_URL", "https://strategic.expo.app/").strip()
+    parsed_url = urlparse(base_url)
+    if not parsed_url.scheme or not parsed_url.netloc:
+        raise ValueError(
+            "BASE_URL must be a full URL such as 'https://strategic.expo.app/' or "
+            "'http://localhost:8081/'."
+        )
+    return base_url
+
+
 @dataclass(frozen=True)
 class Settings:
-    base_url: str = field(
-        default_factory=lambda: os.getenv("BASE_URL", "https://strategic.expo.app/")
-    )
+    base_url: str = field(default_factory=_get_base_url)
     browser_name: str = field(default_factory=lambda: os.getenv("BROWSER", "chromium"))
     headless: bool = field(
         default_factory=lambda: os.getenv("HEADLESS", "false").lower() == "true"

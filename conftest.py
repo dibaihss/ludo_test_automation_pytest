@@ -28,6 +28,21 @@ def _open_offline_home(page: Page, base_url: str) -> HomePage:
     return home_page
 
 
+def _open_home_via_login(page: Page, base_url: str) -> HomePage:
+    entry_page = EntryPage(page, base_url)
+    home_page = HomePage(page, base_url)
+
+    entry_page.open()
+    entry_page.assert_loaded()
+    entry_page.login_as_guest()
+    entry_page.enter_guest_username("TestUser")
+    entry_page.confirm_guest_username()
+    home_page.assert_loaded()
+
+    return home_page
+
+
+
 @pytest.fixture(scope="session")
 def settings() -> Settings:
     return get_settings()
@@ -87,6 +102,12 @@ def play_with_family_mode(page: Page, settings: Settings) -> ScreenPage:
 
     return screen_page
 
+
+@pytest.fixture()
+def play_online_mode(page: Page, settings: Settings) -> HomePage:
+    home_page = _open_home_via_login(page, settings.base_url)
+
+    return home_page
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[None]):
