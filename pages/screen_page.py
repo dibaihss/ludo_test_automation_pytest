@@ -26,6 +26,12 @@ class ScreenPage(BasePage):
             raise ValueError("soldier_id must be a positive integer")
         return self.page.get_by_test_id(f"soldier-{soldier_id}")
 
+    def soldier_position(self, soldier_id: int) -> tuple[float, float]:
+        bounding_box = self.soldier(soldier_id).bounding_box()
+        if bounding_box is None:
+            raise AssertionError(f"Could not determine position for soldier {soldier_id}")
+        return bounding_box["x"], bounding_box["y"]
+
     def move_card(self, steps: int, *, color: str = "blue") -> Locator:
         if steps not in range(1, 7):
             raise ValueError("steps must be between 1 and 6")
@@ -117,6 +123,29 @@ class ScreenPage(BasePage):
 
     def assert_soldier_visible(self, soldier_id: int) -> None:
         expect(self.soldier(soldier_id)).to_be_visible()
+
+    def assert_soldier_moved(
+        self,
+        soldier_id: int,
+        *,
+        from_position: tuple[float, float],
+        timeout_ms: int = 5_000,
+    ) -> None:
+        from_x, from_y = from_position
+        self.page.wait_for_function(
+            """
+            ([testId, expectedX, expectedY]) => {
+                const element = document.querySelector(`[data-testid="${testId}"]`);
+                if (!element) {
+                    return false;
+                }
+                const rect = element.getBoundingClientRect();
+                return rect.x !== expectedX || rect.y !== expectedY;
+            }
+            """,
+            arg=[f"soldier-{soldier_id}", from_x, from_y],
+            timeout=timeout_ms,
+        )
 
     def select_soldier(self, soldier_id: int) -> None:
         self.soldier(soldier_id).click()

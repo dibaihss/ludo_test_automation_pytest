@@ -66,7 +66,7 @@ def page(context: BrowserContext, request: pytest.FixtureRequest) -> Iterator[Pa
 
 
 @pytest.fixture()
-def offline_game_screen(page: Page, settings: Settings) -> ScreenPage:
+def play_vs_bot_mode(page: Page, settings: Settings) -> ScreenPage:
     home_page = _open_offline_home(page, settings.base_url)
     screen_page = ScreenPage(page, settings.base_url)
 
