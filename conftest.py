@@ -16,6 +16,18 @@ def _sanitize_node_id(node_id: str) -> str:
     return "".join(character if character.isalnum() else "_" for character in node_id)
 
 
+def _open_offline_home(page: Page, base_url: str) -> HomePage:
+    entry_page = EntryPage(page, base_url)
+    home_page = HomePage(page, base_url)
+
+    entry_page.open()
+    entry_page.assert_loaded()
+    entry_page.start_offline()
+    home_page.assert_loaded()
+
+    return home_page
+
+
 @pytest.fixture(scope="session")
 def settings() -> Settings:
     return get_settings()
@@ -55,15 +67,22 @@ def page(context: BrowserContext, request: pytest.FixtureRequest) -> Iterator[Pa
 
 @pytest.fixture()
 def offline_game_screen(page: Page, settings: Settings) -> ScreenPage:
-    entry_page = EntryPage(page, settings.base_url)
-    home_page = HomePage(page, settings.base_url)
+    home_page = _open_offline_home(page, settings.base_url)
     screen_page = ScreenPage(page, settings.base_url)
 
-    entry_page.open()
-    entry_page.assert_loaded()
-    entry_page.start_offline()
-    home_page.assert_loaded()
     home_page.start_offline_vs_bot(difficulty="Easy")
+    screen_page.assert_loaded()
+
+    return screen_page
+
+
+@pytest.fixture()
+def play_with_family_mode(page: Page, settings: Settings) -> ScreenPage:
+    home_page = _open_offline_home(page, settings.base_url)
+    screen_page = ScreenPage(page, settings.base_url)
+
+    home_page.open_offline_options()
+    home_page.choose_play_with_family_mode()
     screen_page.assert_loaded()
 
     return screen_page

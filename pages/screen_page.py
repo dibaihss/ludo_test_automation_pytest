@@ -10,7 +10,7 @@ from pages.base_page import BasePage
 class ScreenPage(BasePage):
     game_screen_test_id = "game-screen"
     turn_color_pattern = re.compile(
-        r"Time:\s*\d+s[^a-z]*(red|blue|yellow|green)", re.IGNORECASE
+        r"Time:\s*\d+s[^a-z]*(red|blue|pink|green)", re.IGNORECASE
     )
     tutorial_title = "Select a soldier"
     tutorial_dismiss = "Skip tutorial"
@@ -95,7 +95,6 @@ class ScreenPage(BasePage):
         expect(self.root).to_be_visible()
         expect(self.skip_turn_button()).to_be_visible()
         expect(self.exit_button()).to_be_visible()
-        self.expect_text_visible(self.tutorial_title)
 
     def assert_tutorial_visible(self) -> None:
         self.expect_text_visible(self.tutorial_title)

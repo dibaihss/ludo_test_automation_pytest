@@ -13,6 +13,7 @@ class HomePage(BasePage):
     play_offline_label = "Play Offline"
     options_heading = "Offline Play Options"
     bot_option = "Play vs Bot"
+    play_with_family = "Play with Family"
 
     @property
     def root(self) -> Locator:
@@ -32,6 +33,10 @@ class HomePage(BasePage):
     def choose_play_vs_bot(self) -> None:
         self.click_text(self.bot_option)
         self.expect_text_visible("Choose bot difficulty")
+        
+    def choose_play_with_family_mode(self) -> None:
+        self.click_text(self.play_with_family)
+        self.expect_text_visible("Game Instructions")
 
     def choose_bot_difficulty(self, difficulty: str) -> None:
         self.click_text(difficulty)
