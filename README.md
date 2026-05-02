@@ -55,6 +55,18 @@ These environment variables are supported:
 - `VIEWPORT_WIDTH` defaults to `1440`
 - `VIEWPORT_HEIGHT` defaults to `1024`
 
+You can set them in a local `.env` file at the project root. Example:
+
+```dotenv
+BASE_URL=https://strategic.expo.app/
+HEADLESS=false
+SLOW_MO=1000
+VIEWPORT_WIDTH=1440
+VIEWPORT_HEIGHT=1024
+```
+
+Values from the shell still win over `.env` values if both are set.
+
 ## Adding coverage
 
 Add new page objects under `pages/` and keep selectors inside those classes. Tests should call page-object methods and avoid direct locator usage.
