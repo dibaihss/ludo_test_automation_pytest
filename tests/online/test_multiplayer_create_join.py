@@ -1,7 +1,7 @@
 from pages.screen_page import ScreenPage
 
 
-def test_guest_player_can_create_and_second_guest_can_join(two_online_players):
+def test_guest_player_can_create_and_one_guest_can_join(two_online_players):
     host_home_page, guest_home_page, _, _ = two_online_players
 
     host_match_list = host_home_page.open_multiplayer()
@@ -18,6 +18,38 @@ def test_guest_player_can_create_and_second_guest_can_join(two_online_players):
     guest_waiting_room.wait_for_player_count("4/4")
     assert host_waiting_room.match_name() == match_name
     assert guest_waiting_room.match_name() == match_name
+
+    host_game_screen = host_waiting_room.start_game()
+    guest_game_screen = ScreenPage(guest_waiting_room.page, guest_waiting_room.base_url)
+    guest_game_screen.assert_loaded()
+    assert host_game_screen.current_turn_color() in {"red", "blue", "pink", "green"}
+    
+def test_guest_player_can_create_and_two_guests_can_join(three_online_players):
+    host_home_page, guest_home_page, second_guest_home_page, _, _, _ = three_online_players
+
+    host_match_list = host_home_page.open_multiplayer()
+    host_waiting_room = host_match_list.create_match()
+    match_name = host_waiting_room.match_name()
+
+    guest_match_list = guest_home_page.open_multiplayer()
+    guest_waiting_room = guest_match_list.join_match(match_name)
+    
+    second_guest_match_list = second_guest_home_page.open_multiplayer()
+    second_guest_waiting_room = second_guest_match_list.join_match(match_name)
+
+    host_waiting_room.wait_for_player_count("3/4")
+    guest_waiting_room.wait_for_player_count("3/4")
+    second_guest_waiting_room.wait_for_player_count("3/4")
+    host_waiting_room.add_bots(1)
+    
+    host_waiting_room.wait_for_player_count("4/4")
+    guest_waiting_room.wait_for_player_count("4/4")
+    second_guest_waiting_room.wait_for_player_count("4/4")
+    
+    assert host_waiting_room.match_name() == match_name
+    assert guest_waiting_room.match_name() == match_name
+    assert second_guest_waiting_room.match_name() == match_name
+    
 
     host_game_screen = host_waiting_room.start_game()
     guest_game_screen = ScreenPage(guest_waiting_room.page, guest_waiting_room.base_url)
