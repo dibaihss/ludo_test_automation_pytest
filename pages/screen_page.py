@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import time
 
 from playwright.sync_api import Locator, expect
 
@@ -153,19 +154,18 @@ class ScreenPage(BasePage):
         timeout_ms: int = 5_000,
     ) -> None:
         from_x, from_y = from_position
-        self.page.wait_for_function(
-            """
-            ([testId, expectedX, expectedY]) => {
-                const element = document.querySelector(`[data-testid="${testId}"]`);
-                if (!element) {
-                    return false;
-                }
-                const rect = element.getBoundingClientRect();
-                return rect.x !== expectedX || rect.y !== expectedY;
-            }
-            """,
-            arg=[f"soldier-{soldier_id}", from_x, from_y],
-            timeout=timeout_ms,
+        deadline = time.monotonic() + (timeout_ms / 1_000)
+        while time.monotonic() < deadline:
+            bounding_box = self.soldier(soldier_id).bounding_box()
+            if bounding_box is not None and (
+                abs(bounding_box["x"] - from_x) > 0.5
+                or abs(bounding_box["y"] - from_y) > 0.5
+            ):
+                return
+            self.page.wait_for_timeout(100)
+
+        raise AssertionError(
+            f"Soldier {soldier_id} did not move from {from_position} within {timeout_ms}ms"
         )
 
     def select_soldier(self, soldier_id: int) -> None:

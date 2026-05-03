@@ -104,72 +104,39 @@ def play_with_family_mode(page: Page, settings: Settings) -> ScreenPage:
 
 
 @pytest.fixture()
-def two_online_players(browser: Browser, settings: Settings) -> Iterator[tuple[HomePage, HomePage, str, str]]:
-    first_context = browser.new_context(
-        viewport={"width": settings.viewport_width, "height": settings.viewport_height}
-    )
-    second_context = browser.new_context(
-        viewport={"width": settings.viewport_width, "height": settings.viewport_height}
-    )
-    first_context.set_default_timeout(15_000)
-    second_context.set_default_timeout(15_000)
-
-    host_page = first_context.new_page()
-    guest_page = second_context.new_page()
-
+def online_players(
+    browser: Browser,
+    settings: Settings,
+    request: pytest.FixtureRequest,
+) -> Iterator[list[HomePage]]:
+    player_count = getattr(request, "param", 2)
+    contexts: list[BrowserContext] = []
+    pages: list[Page] = []
+    home_pages: list[HomePage] = []
     run_suffix = uuid4().hex[:6]
-    host_username = f"Host{run_suffix}"
-    guest_username = f"Guest{run_suffix}"
 
-    host_home_page = _open_online_home(host_page, settings.base_url, host_username)
-    guest_home_page = _open_online_home(guest_page, settings.base_url, guest_username)
+    try:
+        for index in range(player_count):
+            context = browser.new_context(
+                viewport={"width": settings.viewport_width, "height": settings.viewport_height}
+            )
+            context.set_default_timeout(15_000)
+            contexts.append(context)
 
-    yield host_home_page, guest_home_page, host_username, guest_username
+            page = context.new_page()
+            pages.append(page)
 
-    host_page.close()
-    guest_page.close()
-    first_context.close()
-    second_context.close()
-    
+            username = "Host" if index == 0 else f"Guest{index}"
+            home_pages.append(
+                _open_online_home(page, settings.base_url, f"{username}{run_suffix}")
+            )
 
-@pytest.fixture()
-def three_online_players(browser: Browser, settings: Settings) -> Iterator[tuple[HomePage, HomePage, HomePage, str, str, str]]:
-    first_context = browser.new_context(
-        viewport={"width": settings.viewport_width, "height": settings.viewport_height}
-    )
-    second_context = browser.new_context(
-        viewport={"width": settings.viewport_width, "height": settings.viewport_height}
-    )
-    
-    third_context = browser.new_context(
-        viewport={"width": settings.viewport_width, "height": settings.viewport_height}
-    )
-    
-    first_context.set_default_timeout(15_000)
-    second_context.set_default_timeout(15_000)
-    third_context.set_default_timeout(15_000)
-
-    host_page = first_context.new_page()
-    guest_page = second_context.new_page()
-    second_guest_page = third_context.new_page()
-
-    run_suffix = uuid4().hex[:6]
-    host_username = f"Host{run_suffix}"
-    guest_username = f"Guest{run_suffix}"
-    second_guest_username = f"SecondGuest{run_suffix}"
-
-    host_home_page = _open_online_home(host_page, settings.base_url, host_username)
-    guest_home_page = _open_online_home(guest_page, settings.base_url, guest_username)
-    second_guest_home_page = _open_online_home(second_guest_page, settings.base_url, second_guest_username)
-
-    yield host_home_page, guest_home_page, second_guest_home_page, host_username, guest_username, second_guest_username
-
-    host_page.close()
-    guest_page.close()
-    second_guest_page.close()
-    first_context.close()
-    second_context.close()
-    third_context.close()
+        yield home_pages
+    finally:
+        for page in pages:
+            page.close()
+        for context in contexts:
+            context.close()
 
 
 @pytest.hookimpl(hookwrapper=True)

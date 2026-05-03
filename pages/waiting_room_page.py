@@ -69,8 +69,8 @@ class WaitingRoomPage(BasePage):
         self.wait_for_player_count(expected_count)
 
     def add_bots(self, count: int, difficulty: str = "Easy") -> None:
-        if count < 1:
-            raise ValueError("count must be at least 1")
+        if count < 0:
+            raise ValueError("count must not be negative")
         for _ in range(count):
             self.add_bot(difficulty)
 
