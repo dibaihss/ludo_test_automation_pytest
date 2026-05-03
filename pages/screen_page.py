@@ -21,6 +21,12 @@ class ScreenPage(BasePage):
     def root(self) -> Locator:
         return self.page.get_by_test_id(self.game_screen_test_id)
 
+    def _control_color(self, color: str) -> str:
+        normalized_color = color.lower()
+        if normalized_color == "pink":
+            return "yellow"
+        return normalized_color
+
     def soldier(self, soldier_id: int) -> Locator:
         if soldier_id < 1:
             raise ValueError("soldier_id must be a positive integer")
@@ -35,10 +41,12 @@ class ScreenPage(BasePage):
     def move_card(self, steps: int, *, color: str = "blue") -> Locator:
         if steps not in range(1, 7):
             raise ValueError("steps must be between 1 and 6")
-        return self.page.get_by_test_id(f"move-card-{color.lower()}-{steps}")
+        control_color = self._control_color(color)
+        return self.page.get_by_test_id(f"move-card-{control_color}-{steps}")
 
     def enter_soldier_button(self, *, color: str = "blue") -> Locator:
-        return self.page.get_by_test_id(f"enter-soldier-{color.lower()}")
+        control_color = self._control_color(color)
+        return self.page.get_by_test_id(f"enter-soldier-{control_color}")
 
     def skip_turn_button(self) -> Locator:
         return self.page.get_by_test_id("game-skip-turn-button")
@@ -70,8 +78,12 @@ class ScreenPage(BasePage):
                     return false;
                 }
                 const text = root.textContent || "";
-                const match = text.match(/Time:\s*\d+s[^A-Za-z]*(red|blue|yellow|green)/i);
-                return !!match && match[1].toLowerCase() === expectedColor;
+                const match = text.match(/Time:\s*\d+s[^A-Za-z]*(red|blue|pink|yellow|green)/i);
+                if (!match) {
+                    return false;
+                }
+                const actualColor = match[1].toLowerCase() === "yellow" ? "pink" : match[1].toLowerCase();
+                return actualColor === expectedColor;
             }
             """,
             arg=[self.game_screen_test_id, expected_color],
@@ -88,8 +100,12 @@ class ScreenPage(BasePage):
                     return false;
                 }
                 const text = root.textContent || "";
-                const match = text.match(/Time:\s*\d+s[^A-Za-z]*(red|blue|yellow|green)/i);
-                return !!match && match[1].toLowerCase() !== originalColor;
+                const match = text.match(/Time:\s*\d+s[^A-Za-z]*(red|blue|pink|yellow|green)/i);
+                if (!match) {
+                    return false;
+                }
+                const actualColor = match[1].toLowerCase() === "yellow" ? "pink" : match[1].toLowerCase();
+                return actualColor !== originalColor;
             }
             """,
             arg=[self.game_screen_test_id, original_color],
@@ -111,6 +127,11 @@ class ScreenPage(BasePage):
 
     def skip_tutorial(self) -> None:
         self.page.get_by_test_id("tutorial-skip-button").click()
+
+    def dismiss_tutorial_if_present(self) -> None:
+        tutorial_skip_button = self.page.get_by_test_id("tutorial-skip-button")
+        if tutorial_skip_button.count() > 0:
+            tutorial_skip_button.click()
 
     def dismiss_game_instructions_if_present(self) -> None:
         got_it_button = self.page.get_by_text("Got it", exact=True)
