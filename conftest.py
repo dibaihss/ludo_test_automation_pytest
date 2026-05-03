@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
 from playwright.sync_api import Browser, BrowserContext, Page, Playwright, sync_playwright
@@ -23,6 +24,20 @@ def _open_offline_home(page: Page, base_url: str) -> HomePage:
     entry_page.open()
     entry_page.assert_loaded()
     entry_page.start_offline()
+    home_page.assert_loaded()
+
+    return home_page
+
+
+def _open_online_home(page: Page, base_url: str, username: str) -> HomePage:
+    entry_page = EntryPage(page, base_url)
+    home_page = HomePage(page, base_url)
+
+    entry_page.open()
+    entry_page.assert_loaded()
+    entry_page.login_as_guest()
+    entry_page.enter_guest_username(username)
+    entry_page.confirm_guest_username()
     home_page.assert_loaded()
 
     return home_page
@@ -86,6 +101,42 @@ def play_with_family_mode(page: Page, settings: Settings) -> ScreenPage:
     screen_page.assert_loaded()
 
     return screen_page
+
+
+@pytest.fixture()
+def online_players(
+    browser: Browser,
+    settings: Settings,
+    request: pytest.FixtureRequest,
+) -> Iterator[list[HomePage]]:
+    player_count = getattr(request, "param", 2)
+    contexts: list[BrowserContext] = []
+    pages: list[Page] = []
+    home_pages: list[HomePage] = []
+    run_suffix = uuid4().hex[:6]
+
+    try:
+        for index in range(player_count):
+            context = browser.new_context(
+                viewport={"width": settings.viewport_width, "height": settings.viewport_height}
+            )
+            context.set_default_timeout(15_000)
+            contexts.append(context)
+
+            page = context.new_page()
+            pages.append(page)
+
+            username = "Host" if index == 0 else f"Guest{index}"
+            home_pages.append(
+                _open_online_home(page, settings.base_url, f"{username}{run_suffix}")
+            )
+
+        yield home_pages
+    finally:
+        for page in pages:
+            page.close()
+        for context in contexts:
+            context.close()
 
 
 @pytest.hookimpl(hookwrapper=True)

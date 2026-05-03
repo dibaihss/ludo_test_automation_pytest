@@ -5,12 +5,14 @@ import re
 from playwright.sync_api import Locator, expect
 
 from pages.base_page import BasePage
+from pages.match_list_page import MatchListPage
 
 
 class HomePage(BasePage):
     app_title = "Strategic Ludo"
     heading = "Dashboard"
     play_offline_label = "Play Offline"
+    multiplayer_label = "Multiplayer"
     options_heading = "Offline Play Options"
     bot_option = "Play vs Bot"
     play_with_family = "Play with Family"
@@ -25,10 +27,17 @@ class HomePage(BasePage):
         expect(self.root.get_by_text(self.app_title, exact=True)).to_be_visible()
         expect(self.root.get_by_text(self.heading, exact=True)).to_be_visible()
         expect(self.root.get_by_text(self.play_offline_label, exact=True)).to_be_visible()
+        expect(self.root.get_by_text(self.multiplayer_label, exact=True)).to_be_visible()
 
     def open_offline_options(self) -> None:
         self.root.get_by_text(self.play_offline_label, exact=True).click()
         self.expect_text_visible(self.options_heading)
+
+    def open_multiplayer(self) -> MatchListPage:
+        self.page.get_by_test_id("home-play-multiplayer-button").click()
+        match_list_page = MatchListPage(self.page, self.base_url)
+        match_list_page.assert_loaded()
+        return match_list_page
 
     def choose_play_vs_bot(self) -> None:
         self.click_text(self.bot_option)
