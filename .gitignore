@@ -1,7 +1,10 @@
+# Gitignore file for Python and Playwright test automation project
+.env
+
 __pycache__/
 .pytest_cache/
 .venv/
-.env
+
 artifacts/screenshots/
 
 # Playwright
