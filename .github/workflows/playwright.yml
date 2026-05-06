@@ -1,10 +1,10 @@
-name: Regression Suite – SauceDemo
+name: Regression Suite
 
 on:
   push:
-    branches: ["main", "master"]
+    branches: ["main", "develop"]
   pull_request:
-    branches: ["main", "master"]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
@@ -29,7 +29,10 @@ jobs:
         run: python -m playwright install --with-deps chromium
 
       - name: Run test suite (headless)
-        run: pytest --headless --html=report.html --self-contained-html -v
+        env:
+          HEADLESS: "true"
+          SLOW_MO: "0"
+        run: pytest --html=report.html --self-contained-html -v
 
       - name: Upload HTML report
         if: always()

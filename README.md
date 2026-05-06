@@ -61,6 +61,18 @@ $env:HEADLESS = "false"
 pytest tests/test_basic_gameplay_navigation.py
 ```
 
+Run the current GitHub Actions test job locally:
+
+```powershell
+.\scripts\run-ci-local.ps1
+```
+
+Run only the CI collection/report sanity check locally:
+
+```powershell
+.\scripts\run-ci-local.ps1 -CollectOnly
+```
+
 ## Configuration
 
 These environment variables are supported:
